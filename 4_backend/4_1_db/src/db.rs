@@ -4,17 +4,17 @@ pub const DB_URL: &str = "sqlite://db.sqlite3";
 
 #[derive(Debug, sqlx::FromRow)]
 #[allow(dead_code)]
-struct User {
-    id: i32,
-    name: String,
+pub struct User {
+    pub id: i32,
+    pub name: String,
 }
 
 #[derive(Debug, sqlx::FromRow)]
 #[allow(dead_code)]
-struct Role {
-    slug: String,
-    name: String,
-    permissions: String,
+pub struct Role {
+    pub slug: String,
+    pub name: String,
+    pub permissions: String,
 }
 
 pub async fn create_database() -> Result<SqlitePool, sqlx::Error> {
@@ -72,6 +72,37 @@ pub async fn create_user(pool: &Pool<Sqlite>, name: &str) -> anyhow::Result<()> 
     Ok(())
 }
 
+pub async fn delete_user(pool: &Pool<Sqlite>, id: i32) -> anyhow::Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM users
+        WHERE id = ?
+        "#,
+    )
+    .bind(id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn update_user(
+    pool: &Pool<Sqlite>,
+    id: i32,
+    field: &str,
+    value: &str,
+) -> anyhow::Result<()> {
+    let query = format!("UPDATE users SET {} = ? WHERE id = ?", field);
+
+    sqlx::query(&query)
+        .bind(value)
+        .bind(id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
 pub async fn create_role(
     pool: &Pool<Sqlite>,
     slug: &str,
@@ -93,20 +124,6 @@ pub async fn create_role(
     Ok(())
 }
 
-pub async fn delete_user(pool: &Pool<Sqlite>, id: i32) -> anyhow::Result<()> {
-    sqlx::query(
-        r#"
-        DELETE FROM users
-        WHERE id = ?
-        "#,
-    )
-    .bind(id)
-    .execute(pool)
-    .await?;
-
-    Ok(())
-}
-
 pub async fn delete_role(pool: &Pool<Sqlite>, slug: &str) -> anyhow::Result<()> {
     sqlx::query(
         r#"
@@ -117,18 +134,6 @@ pub async fn delete_role(pool: &Pool<Sqlite>, slug: &str) -> anyhow::Result<()> 
     .bind(slug)
     .execute(pool)
     .await?;
-
-    Ok(())
-}
-
-pub async fn update_user(pool: &Pool<Sqlite>, id: i32, field: &str, value: &str) -> anyhow::Result<()> {
-    let query = format!("UPDATE users SET {} = ? WHERE id = ?", field);
-
-    sqlx::query(&query)
-        .bind(value)
-        .bind(id)
-        .execute(pool)
-        .await?;
 
     Ok(())
 }
@@ -165,7 +170,11 @@ pub async fn assign_role(pool: &Pool<Sqlite>, user_id: i32, role_slug: &str) -> 
     Ok(())
 }
 
-pub async fn unassign_role(pool: &Pool<Sqlite>, user_id: i32, role_slug: &str) -> anyhow::Result<()> {
+pub async fn unassign_role(
+    pool: &Pool<Sqlite>,
+    user_id: i32,
+    role_slug: &str,
+) -> anyhow::Result<()> {
     sqlx::query(
         r#"
         DELETE FROM users_roles

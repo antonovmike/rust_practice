@@ -4,6 +4,9 @@ use sqlx::sqlite::SqlitePoolOptions;
 
 mod db;
 
+#[cfg(test)]
+mod tests;
+
 use crate::db::*;
 
 #[tokio::main]
