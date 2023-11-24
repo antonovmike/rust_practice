@@ -1,36 +1,29 @@
 use super::*;
-use sqlx::sqlite::SqlitePoolOptions;
-use sqlx::SqlitePool;
 use tokio::test;
 
 #[cfg(test)]
-async fn setup_db() -> Result<SqlitePool, sqlx::Error> {
-    let pool = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect("sqlite://:memory:")
-        .await?;
-
-    create_tables(&pool).await.unwrap();
-
-    Ok(pool)
+async fn setup_db() -> Result<DataBase, sqlx::Error> {
+    let db = DataBase::create_database("sqlite://:memory:").await?;
+    db.create_tables().await.unwrap();
+    Ok(db)
 }
 
 #[cfg(test)]
 #[test]
 async fn test_create_user() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_user(&pool, "test_user").await?;
+    db.create_user("test_user").await?;
 
     let user = sqlx::query_as::<_, User>(
         r#"
-        SELECT id, name
-        FROM users
-        WHERE name = ?
-        "#,
+       SELECT id, name
+       FROM users
+       WHERE name = ?
+       "#,
     )
     .bind("test_user")
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await?;
 
     assert_eq!(user.name, "test_user");
@@ -41,11 +34,10 @@ async fn test_create_user() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_delete_user() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_user(&pool, "test_user").await?;
-
-    delete_user(&pool, 1).await?;
+    db.create_user("test_user").await?;
+    db.delete_user(1).await?;
 
     let result = sqlx::query_as::<_, User>(
         r#"
@@ -55,7 +47,7 @@ async fn test_delete_user() -> anyhow::Result<()> {
         "#,
     )
     .bind(1)
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await;
 
     assert!(result.is_err());
@@ -63,12 +55,17 @@ async fn test_delete_user() -> anyhow::Result<()> {
     Ok(())
 }
 
+// #[cfg(test)]
+// #[test]
+// async fn test_update_user() -> anyhow::Result<()> {}
+
 #[cfg(test)]
 #[test]
 async fn test_create_role() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_role(&pool, "test_role", "Test Role", "read,write").await?;
+    db.create_role("test_role", "Test Role", "read,write")
+        .await?;
 
     let role = sqlx::query_as::<_, Role>(
         r#"
@@ -78,7 +75,7 @@ async fn test_create_role() -> anyhow::Result<()> {
         "#,
     )
     .bind("test_role")
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await?;
 
     assert_eq!(role.slug, "test_role");
@@ -91,11 +88,11 @@ async fn test_create_role() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_delete_role() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_role(&pool, "test_role", "Test Role", "read,write").await?;
-
-    delete_role(&pool, "test_role").await?;
+    db.create_role("test_role", "Test Role", "read,write")
+        .await?;
+    db.delete_role("test_role").await?;
 
     let result = sqlx::query_as::<_, Role>(
         r#"
@@ -105,7 +102,7 @@ async fn test_delete_role() -> anyhow::Result<()> {
         "#,
     )
     .bind("test_role")
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await;
 
     assert!(result.is_err());
@@ -116,38 +113,40 @@ async fn test_delete_role() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_update_role() -> anyhow::Result<()> {
-   let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-   create_role(&pool, "test_role", "Test Role", "read,write").await?;
-   update_role(&pool, "test_role", "permissions", "read,write,delete").await?;
+    db.create_role("test_role", "Test Role", "read,write")
+        .await?;
+    db.update_role("test_role", "permissions", "read,write,delete")
+        .await?;
 
-   let role = sqlx::query_as::<_, Role>(
-       r#"
+    let role = sqlx::query_as::<_, Role>(
+        r#"
        SELECT slug, name, permissions
        FROM roles
        WHERE slug = ?
        "#,
-   )
-   .bind("test_role")
-   .fetch_one(&pool)
-   .await?;
+    )
+    .bind("test_role")
+    .fetch_one(&db.pool)
+    .await?;
 
-   assert_eq!(role.slug, "test_role");
-   assert_eq!(role.name, "Test Role");
-   assert_eq!(role.permissions, "read,write,delete");
+    assert_eq!(role.slug, "test_role");
+    assert_eq!(role.name, "Test Role");
+    assert_eq!(role.permissions, "read,write,delete");
 
-   Ok(())
+    Ok(())
 }
 
 #[cfg(test)]
 #[test]
 async fn test_assign_role() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_user(&pool, "test_user").await?;
-    create_role(&pool, "test_role", "Test Role", "read,write").await?;
-
-    assign_role(&pool, 1, "test_role").await?;
+    db.create_user("test_user").await?;
+    db.create_role("test_role", "Test Role", "read,write")
+        .await?;
+    db.assign_role(1, "test_role").await?;
 
     let user_role = sqlx::query(
         r#"
@@ -158,7 +157,7 @@ async fn test_assign_role() -> anyhow::Result<()> {
         "#,
     )
     .bind(1)
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await?;
 
     let slug: String = sqlx::Row::get(&user_role, "slug");
@@ -170,13 +169,13 @@ async fn test_assign_role() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_unassign_role() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_user(&pool, "test_user").await?;
-    create_role(&pool, "test_role", "Test Role", "read,write").await?;
-    assign_role(&pool, 1, "test_role").await?;
-
-    unassign_role(&pool, 1, "test_role").await?;
+    db.create_user("test_user").await?;
+    db.create_role("test_role", "Test Role", "read,write")
+        .await?;
+    db.assign_role(1, "test_role").await?;
+    db.unassign_role(1, "test_role").await?;
 
     let result = sqlx::query(
         r#"
@@ -187,7 +186,7 @@ async fn test_unassign_role() -> anyhow::Result<()> {
         "#,
     )
     .bind(1)
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await;
 
     assert!(result.is_err());
@@ -198,12 +197,13 @@ async fn test_unassign_role() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_list_roles() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_role(&pool, "test_role1", "Test Role 1", "read,write").await?;
-    create_role(&pool, "test_role2", "Test Role 2", "read,write").await?;
-
-    list_roles(&pool).await?;
+    db.create_role("test_role1", "Test Role 1", "read,write")
+        .await?;
+    db.create_role("test_role2", "Test Role 2", "read,write")
+        .await?;
+    db.list_roles().await?;
 
     let roles = sqlx::query_as::<_, Role>(
         r#"
@@ -211,7 +211,7 @@ async fn test_list_roles() -> anyhow::Result<()> {
         FROM roles
         "#,
     )
-    .fetch_all(&pool)
+    .fetch_all(&db.pool)
     .await?;
 
     assert_eq!(roles.len(), 2);
@@ -228,11 +228,11 @@ async fn test_list_roles() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_list_role() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_role(&pool, "test_role", "Test Role", "read,write").await?;
-
-    list_role(&pool, "test_role").await?;
+    db.create_role("test_role", "Test Role", "read,write")
+        .await?;
+    db.list_role("test_role").await?;
 
     let role = sqlx::query_as::<_, Role>(
         r#"
@@ -242,7 +242,7 @@ async fn test_list_role() -> anyhow::Result<()> {
         "#,
     )
     .bind("test_role")
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await?;
 
     assert_eq!(role.slug, "test_role");
@@ -255,12 +255,11 @@ async fn test_list_role() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_list_users() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_user(&pool, "test_user1").await?;
-    create_user(&pool, "test_user2").await?;
-
-    list_users(&pool).await?;
+    db.create_user("test_user1").await?;
+    db.create_user("test_user2").await?;
+    db.list_users().await?;
 
     let users = sqlx::query_as::<_, User>(
         r#"
@@ -268,7 +267,7 @@ async fn test_list_users() -> anyhow::Result<()> {
         FROM users
         "#,
     )
-    .fetch_all(&pool)
+    .fetch_all(&db.pool)
     .await?;
 
     assert_eq!(users.len(), 2);
@@ -281,11 +280,10 @@ async fn test_list_users() -> anyhow::Result<()> {
 #[cfg(test)]
 #[test]
 async fn test_list_user() -> anyhow::Result<()> {
-    let pool = setup_db().await?;
+    let db = setup_db().await?;
 
-    create_user(&pool, "test_user").await?;
-
-    list_user(&pool, 1).await?;
+    db.create_user("test_user").await?;
+    db.list_user(1).await?;
 
     let user = sqlx::query_as::<_, User>(
         r#"
@@ -295,7 +293,7 @@ async fn test_list_user() -> anyhow::Result<()> {
         "#,
     )
     .bind(1)
-    .fetch_one(&pool)
+    .fetch_one(&db.pool)
     .await?;
 
     assert_eq!(user.id, 1);
