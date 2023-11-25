@@ -1,7 +1,9 @@
 use std::net::SocketAddr;
 
-use axum::{routing::post, http::StatusCode, Router, Json};
+use axum::{http::StatusCode, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
+
+use db;
 
 #[derive(Serialize, Deserialize)]
 struct Command {
@@ -24,9 +26,16 @@ async fn main() {
         .unwrap();
 }
 
-async fn handler(Json(_cmd): Json<Command>) -> Result<Json<Response>, StatusCode> {
+async fn handler(Json(cmd): Json<Command>) -> Result<Json<Response>, StatusCode> {
     // 1. Parse the command
     // 2. Execute the command
     // 3. Send back the results
+
+    let db = db::db::DataBase::create_database("sqlite://db.sqlite3")
+        .await
+        .unwrap();
+
+    let tokens: Vec<&str> = cmd.command.split_whitespace().collect();
+
     todo!()
 }

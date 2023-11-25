@@ -7,6 +7,13 @@ mod db;
 
 use crate::db::*;
 
+/*
+The logic for handling commands should be moved to the server daemon.
+The server daemon will receive commands from the client, parse them,
+execute them, and send back the results.
+The client will only be responsible for sending commands and rendering the results.
+*/
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let db = DataBase::create_database("sqlite://db.sqlite3").await?;
