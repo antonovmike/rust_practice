@@ -3,6 +3,8 @@ use std::net::SocketAddr;
 use axum::{http::StatusCode, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
 
+use crate::db::commands::handle_command;
+
 use db;
 
 #[derive(Serialize, Deserialize)]
@@ -37,5 +39,7 @@ async fn handler(Json(cmd): Json<Command>) -> Result<Json<Response>, StatusCode>
 
     let tokens: Vec<&str> = cmd.command.split_whitespace().collect();
 
+    // handle_command(&db, tokens).await.unwrap();
+    handle_command(&db, tokens).await.map_err(|_| StatusCode::BAD_REQUEST)?;
     todo!()
 }
