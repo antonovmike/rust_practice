@@ -105,10 +105,29 @@ Rework [the task from the previous step](../4_1_db/README.md#task) in a [client-
 
 After completing everything above, you should be able to answer (and understand why) the following questions:
 - What is HTTP? What does HTTP/2 imply? What does HTTP/3 imply?
+
+HTTP stands for Hypertext Transfer Protocol. It is a protocol that defines how clients and servers communicate over the web.
+HTTP/2 is a major revision of HTTP that introduces several improvements, such as binary framing, header compression, multiplexing, server push, and prioritization.
+HTTP/3 is another revision of HTTP that builds on the concepts of HTTP/2, but uses QUIC as the underlying transport protocol instead of TCP. It is a multiplexed and encrypted protocol, better resilience to packet loss, and more efficient use of network resources.
+
 - How do work-stealing and thread-per-core paradigms affect programming a web server in practice? Which one is better and when? When does this question (choosing) become meaningful, in practice?
+
+Work-stealing and thread-per-core are two different paradigms for scheduling parallel computations on a multi-core system. Work-stealing is a dynamic load balancing technique that assigns each core a queue of tasks to perform, and allows idle cores to "steal" tasks from busy cores. Thread-per-core is a static partitioning technique that assigns each core a dedicated thread that runs an event loop, and uses message passing or shared memory to communicate with other threads.
+The choice of paradigm depends on the characteristics of the application and the hardware. Work-stealing is more suitable for apalications that have irregular and unpredictable workloads, such as recursive algorithms, while thread-per-core is more suitable for applications that have regular and predictable workloads, such as network servers. Work-stealing can achieve better utilization of CPU resources and reduce contention, but it also incurs more overhead for task creation, stealing, and synchronization. Thread-per-core can achieve lower latency and higher throughput, but it also requires more careful tuning of the number of threads, the size of the event loop, and the communication mechanism.The question of choosing between the two paradigms becomes meaningful when the application needs to scale to a large number of cores and handle a high volume of requests or data
+
 - What are common crates for making HTTP requests in [Rust]? Which trade-offs do they have?
+
+There are reqwest, ureq, surf, and isahc. 
+Crate reqwest is a popular and powerful crate that supports both async and blocking clients, HTTP/2, proxies, cookies, JSON, and more. However, it also has a large number of dependencies and a relatively high compile time.
+Crate ureq is a minimal and lightweight crate that provides a simple and synchronous API, but it does not support async, HTTP/2, or streaming.
+Crate surf is a flexible and cross-platform crate that allows switching between different backends, such as curl, hyper, or async-h1. Supports async, streaming, middleware, and cookies.
+Crate isahci is a modern and fast crate that wraps around the libcurl library and provides a rich set of features, such as async, HTTP/2, multipart, redirects, and timeouts. Requires linking to the libcurl library, which may not be available on some platforms.
+
 - What is WebSocket? How is it used and when? How does it work, in a nutshell?
 
+WebSocket is a protocol that enables full-duplex and bidirectional communication between a web browser (or other client) and a web server.
+It is used for applications that require real-time data transfer, such as chat, gaming, streaming, or collaborative editing.
+WebSocket works by establishing a persistent connection over a single TCP socket, and exchanging messages in a binary or text format. WebSocket differs from HTTP in that it allows the server to push data to the client without being requested, and it does not use the HTTP headers or methods. WebSocket reduces the overhead and latency involved in HTTP polling or long-polling techniques.
 
 
 
