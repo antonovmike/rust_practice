@@ -137,12 +137,34 @@ Consider to ensure [data consistency][202] in your database as much as possible.
 ## Questions
 
 After completing everything above, you should be able to answer (and understand why) the following questions:
+
 - What is connection pool pattern? How does it work? Which problems does it solve?
+
+Connection pool pattern is a design pattern that helps streamline communication between relational databases and object-oriented programming languages. It works by creating a cache of database connections that can be reused by the application, instead of opening and closing connections for each request.
+
 - What is ORM pattern? How does it differ from query building? What benefits do they give?
+
+ORM pattern maps the objects in an object-oriented programming language to relational database tables.
+It differs from query building in that it provides a higher-level, object-oriented interface for database access and manipulation, instead of writing raw SQL queries.
+ORM pattern benefits the application by abstracting away the underlying database, making the code more portable, readable, and maintainable. It also automates the tasks of creating, updating, and deleting data, and handles the conversion of data types and formats between the database and the application. And it's easier to swap to different DB.
+
 - Why writing raw SQL queries could be meaningful? Which are use-cases for it and when is it preferred over ORMs?
+
+Writing raw SQL queries could be meaningful in some situations where ORM pattern cannot be used or is not efficient enough.
+Some use cases for writing raw SQL queries are:
+(a) Query is complex or involves features that are not supported by the ORM framework.
+(b) Query needs to be optimized for performance or security reasons, such as using indexes, hints, or parameters.
+(c) Query needs to return data that is not mapped to an entity type, such as aggregated or computed values, or non-entity types.
+
 - What are migrations? Why should we use them? How do they work? 
+
+Migrations are a way of managing the database schema changes over time, to keep the database schema in sync with the application code, and to apply changes to different environments. They work by generating and executing scripts that can create, modify, or drop database objects.
+
 - Which kinds of migrations do exist? What are their advantages and disadvantages? When and which kind is preferred?  
 
+2 kinds of migrations: code-based and automatic.
+Code-based migrations are created and controlled by the developer. They have more control and flexibility, but also more code and effort. They are preferred when the schema changes are complex or involve data manipulation.
+Automatic migrations are generated and executed by the ORM framework. They have less code and effort, but also less control and flexibility. They are preferred when the schema changes are simple or straightforward.
 
 
 
