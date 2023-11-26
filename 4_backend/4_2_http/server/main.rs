@@ -17,15 +17,15 @@ struct Response {
     result: String,
 }
 
-// 1. Parse the command
-// 2. Execute the command
-// 3. Send back the results
-
 #[tokio::main]
 async fn main() {
-    let db = db::db::DataBase::create_database("sqlite://db.sqlite3").await.unwrap();
+    let db = db::db::DataBase::create_database("sqlite://db.sqlite3")
+        .await
+        .unwrap();
 
-    let app = Router::new().route("/command", post(handler)).with_state(db);
+    let app = Router::new()
+        .route("/command", post(handler))
+        .with_state(db);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     axum::Server::bind(&addr)
@@ -41,6 +41,9 @@ async fn handler(Json(cmd): Json<Command>) -> Result<Json<Response>, StatusCode>
 
     let tokens: Vec<&str> = cmd.command.split_whitespace().collect();
 
-    handle_command(&db, tokens).await.map_err(|_| StatusCode::BAD_REQUEST)?;
-    todo!()
+    let result = handle_command(&db, tokens)
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?;
+    Ok(Json(Response { result }))
+    // Ok(Json(Response { result: serde_json::from_str(&result).unwrap() }))
 }

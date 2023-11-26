@@ -1,10 +1,11 @@
+use serde::{Serialize, Deserialize};
 use sqlx::{migrate::MigrateDatabase, Pool, Row, Sqlite, SqlitePool};
 
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 #[allow(dead_code)]
 pub struct User {
-    pub id: i32,
-    pub name: String,
+   pub id: i32,
+   pub name: String,
 }
 
 #[derive(Debug, sqlx::FromRow)]
@@ -229,6 +230,24 @@ impl DataBase {
 
         Ok(())
     }
+
+    // pub async fn list_users(&self) -> anyhow::Result<String> {
+    //     let rows = sqlx::query_as::<_, User>(
+    //         r#"
+    //         SELECT id, name
+    //         FROM users
+    //         "#,
+    //     )
+    //     .fetch_all(&self.pool)
+    //     .await?;
+
+    //     let mut users = Vec::new();
+    //     for user in rows {
+    //         users.push(format!("{:?}", user));
+    //     }
+
+    //     Ok(users.join("\n"))
+    // }
 
     pub async fn list_user(&self, id: i32) -> anyhow::Result<()> {
         let user = sqlx::query_as::<_, User>(
