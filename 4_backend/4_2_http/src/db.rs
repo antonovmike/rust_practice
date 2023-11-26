@@ -15,6 +15,7 @@ pub struct Role {
     pub permissions: String,
 }
 
+#[derive(Clone)]
 pub struct DataBase {
     pub pool: Pool<Sqlite>,
 }
