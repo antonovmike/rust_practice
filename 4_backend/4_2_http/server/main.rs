@@ -44,6 +44,6 @@ async fn handler(Json(cmd): Json<Command>) -> Result<Json<Response>, StatusCode>
     let result = handle_command(&db, tokens)
         .await
         .map_err(|_| StatusCode::BAD_REQUEST)?;
+    println!("{result}");
     Ok(Json(Response { result }))
-    // Ok(Json(Response { result: serde_json::from_str(&result).unwrap() }))
 }

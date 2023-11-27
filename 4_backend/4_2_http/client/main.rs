@@ -4,7 +4,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Response {
     result: String,
 }
@@ -28,6 +28,7 @@ async fn main() -> anyhow::Result<()> {
             .await?;
 
         let result: Response = res.json().await?;
-        println!("{}", result.result);
+
+        println!("[cient]:\n{}", result.result);
     }
 }

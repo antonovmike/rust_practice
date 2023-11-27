@@ -44,14 +44,14 @@ pub async fn handle_command(db: &DataBase, tokens: Vec<&str>) -> anyhow::Result<
         ["list", "role", slug] => {
             let msg = format!("Listing role with slug: {}", slug);
             println!("{msg}");
-            db.list_role(slug).await?;
-            Ok(msg)
+            let rspns = db.list_role(slug).await?;
+            Ok(format!("{:?}", rspns))
         }
         ["list", "users"] => {
             let msg = format!("Listing all users");
             println!("{msg}");
-            db.list_users().await?;
-            Ok(msg)
+            let rspns = db.list_users().await?;
+            Ok(format!("{:?}", rspns))
         }
         ["list", "user", id] => {
             let msg = format!("Listing user with ID: {}", id);

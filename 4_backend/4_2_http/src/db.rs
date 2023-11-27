@@ -180,7 +180,7 @@ impl DataBase {
         Ok(())
     }
 
-    pub async fn list_roles(&self) -> anyhow::Result<()> {
+    pub async fn list_roles(&self) -> anyhow::Result<Vec<Role>> {
         let rows = sqlx::query_as::<_, Role>(
             r#"
             SELECT slug, name, permissions
@@ -190,14 +190,14 @@ impl DataBase {
         .fetch_all(&self.pool)
         .await?;
 
-        for role in rows {
-            println!("{:?}", role);
-        }
+        // for role in rows {
+        //     println!("{:?}", role);
+        // }
 
-        Ok(())
+        Ok(rows)
     }
 
-    pub async fn list_role(&self, slug: &str) -> anyhow::Result<()> {
+    pub async fn list_role(&self, slug: &str) -> anyhow::Result<Role> {
         let role = sqlx::query_as::<_, Role>(
             r#"
             SELECT slug, name, permissions
@@ -211,27 +211,10 @@ impl DataBase {
 
         println!("{:?}", role);
 
-        Ok(())
+        Ok(role)
     }
 
-    pub async fn list_users(&self) -> anyhow::Result<()> {
-        let rows = sqlx::query_as::<_, User>(
-            r#"
-            SELECT id, name
-            FROM users
-            "#,
-        )
-        .fetch_all(&self.pool)
-        .await?;
-
-        for user in rows {
-            println!("{:?}", user);
-        }
-
-        Ok(())
-    }
-
-    // pub async fn list_users(&self) -> anyhow::Result<String> {
+    // pub async fn list_users(&self) -> anyhow::Result<()> {
     //     let rows = sqlx::query_as::<_, User>(
     //         r#"
     //         SELECT id, name
@@ -241,13 +224,25 @@ impl DataBase {
     //     .fetch_all(&self.pool)
     //     .await?;
 
-    //     let mut users = Vec::new();
     //     for user in rows {
-    //         users.push(format!("{:?}", user));
+    //         println!("{:?}", user);
     //     }
 
-    //     Ok(users.join("\n"))
+    //     Ok(())
     // }
+
+    pub async fn list_users(&self) -> anyhow::Result<Vec<User>> {
+        let rows = sqlx::query_as::<_, User>(
+            r#"
+            SELECT id, name
+            FROM users
+            "#,
+        )
+        .fetch_all(&self.pool)
+        .await?;
+     
+        Ok(rows)
+    }
 
     pub async fn list_user(&self, id: i32) -> anyhow::Result<()> {
         let user = sqlx::query_as::<_, User>(
